@@ -1,0 +1,71 @@
+#!/usr/bin/perl
+
+use constant {
+       	API_END		=> qr/\/\*\s*API_END_INCLUDE\s*\*\//i,
+	API_BEGIN	=> qr/\/\*\s*API_BEGIN_INCLUDE\s*\*\//i
+};
+
+if ($#ARGV < 0) {
+	print STDERR "No input files given\n";
+	exit(1);
+}
+
+print <<END;
+/***********************************************************************
+Copyright (c) 2008, 2009 Innobase Oy. All rights reserved.
+Copyright (c) 2008, 2009 Oracle. All rights reserved.
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; version 2 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+************************************************************************/
+
+/* !!!!!!!!!!!!!!!*      This is a generated file.    *!!!!!!!!!!!!!!! */
+
+/*!< \@file innodb.h */
+
+#ifndef INNODB_H
+#define INNODB_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+END
+
+my $filename;
+
+foreach $filename (@ARGV) {
+	my $copy = 0;
+
+	open F, "< $filename" or die "Can't open $filename : $!";
+
+	while (my $line = <F>) {
+		if ($line =~ API_BEGIN) {
+			$copy = 1;
+		} elsif ($line =~ API_END) {
+			$copy = 0;
+		} elsif ($copy == 1) {
+			print $line;
+		}
+	}
+	close(F);
+}
+print <<END;
+#ifdef __cplusplus
+} /* extern "C" */
+#endif /* __cplusplus */
+
+#endif /* INNODB_H */
+END
+
+exit(0);
